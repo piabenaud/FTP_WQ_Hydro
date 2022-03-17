@@ -53,13 +53,13 @@ if(!dir.exists(paste0("ARCHIVED"))) dir.create(paste0(paste0("ARCHIVED")))
 input_site <- list(
   
   ## ***site name (required)
-  site = "Test",                                                                 # this is used for file and plot naming
+  site = "FTP",                                                                 # this is used for file and plot naming
   
   ## ***Timeseries details (frequency, start, end) (required)
   ##  (e.g. use data at 15 min frequency for hydrological year 2017-2018)
   tsfrq = 15,                                                                   # frequency of data (in minutes)
-  ts1 = as.POSIXct("2018-09-03 16:00:00", tz = "UTC"),                             # timeseries start (TO DO default: first timestamp avaiable) 
-  tsn = as.POSIXct("2019-01-29 00:00:00", tz = "UTC")                              # timeseries end (TO DO default: last timestamp avaiable)
+  ts1 = as.POSIXct("2012-03-13 10:45:00", tz = "UTC"),                             # timeseries start (TO DO default: first timestamp avaiable) 
+  tsn = as.POSIXct("2018-01-22 12:00:00", tz = "UTC")                              # timeseries end (TO DO default: last timestamp avaiable)
 )
 
 input_baseSep <- list(
@@ -125,8 +125,26 @@ useroutput <- userinput[c("site",
 # dat <-read_hydro_rds(dateTime_col = 'datetime', rain_col='rainfall', response_col='q',lubridate_time = ymd_hms)
 
 # for reading csv files:
-dat <-read_hydro_csv(dateTime_col = 'datetime', rain_col='rainfall', response_col='q',lubridate_time = dmy_hm)
+#dat <-read_hydro_csv(dateTime_col = 'datetime', rain_col='rainfall', response_col='q',lubridate_time = dmy_hm)
 
+flow <- readr::read_csv("data/02_DTM_stageToFlow_FINAL ALLto20180122.csv") %>% 
+  select("Date  Time", "re-calc Q (m3 sec-1)") %>% 
+  rename("datetime" = 'Date  Time') %>%
+  mutate(datetime = dmy_hm(datetime, tz='UTC')) %>% 
+  rename("q" = 're-calc Q (m3 sec-1)') %>% 
+  mutate(q = as.numeric(q))
+
+rain <- readr::read_csv("data/03_Rainfall_Radar_15min.csv") %>% 
+  select("date_time", "rain_intensity_mmhr")%>%
+  rename("datetime" = 'date_time') %>%
+  mutate(datetime = ymd_hms(datetime, tz='UTC')) %>% 
+  rename('rainfall' = 'rain_intensity_mmhr')
+  
+
+dat <- full_join(flow, rain) %>% 
+  select(datetime, rainfall, q)
+
+rm(flow, rain)
 
 
 #---- >*1.1 Data checks and setup ----------------------------------------------
@@ -247,7 +265,7 @@ update_geom_defaults("line", list(size = 0.2))
 p1 <- ggplot(eventEx) + 
   geom_col(aes(datetime, rainfall, colour = legnd[2], fill=legnd[2]), 
            width = 0.5) + 
-  ylab("Rainfall intensity\n(mm h\u207B\u00B9)") +
+  ylab("Rainfall intensity\n(mm h[-1])") +
   scale_x_datetime(limits = c(xlim_min,xlim_max),
                    date_labels = ("%Y-%m-%d\n%H:%M")) +
   scale_y_reverse(limits = c()) +
@@ -278,7 +296,7 @@ p <- plot_grid(p1, p2, nrow = 2, align = "v", rel_heights = c(0.5, 1.2))
 tiff(paste0("plots/ts_01_eventEx_input_",
             userinput$site, "_",
             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+     width = 210, height = 100, units = 'mm', res = 200, compression = "zip") # to make squares
 print(p)
 dev.off()
 
@@ -379,7 +397,7 @@ p <- ggESDcheck(calc)
 tiff(paste0("plots/","ts_01_eventEx_input_outlierfilter_",
             userinput$site, "_", 
             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+     width = 210, height = 100, units = 'mm', res = 100, compression = "zip") # to make squares
 #width = 210, height = 297, units = 'mm', res = 600) # A4
 print(p)
 dev.off()
@@ -487,7 +505,7 @@ legnd <- c("Event","Rainfall", "Baseflow", "Q", "Response event", "Value", "Inte
 
 ## set x-axis limits
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000 #(first 30 days)                                        # set the end date for the plot
+xlim_max <- ts1+(2592000*5) #(first 30 days)                                        # set the end date for the plot
 
 ## or specify the start and end times for the plot
 # xlim_min <- as.POSIXct(strptime("2018-03-01 00:00", "%Y-%m-%d %H:%M", tz = "UTC"))
@@ -586,7 +604,7 @@ if(!exists("foo", mode = "function")) source("eventEx_04_rainfallEvents_20200127
 
 ## set x-axis limits
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000 #(first 30 days)                                        # set the end date for the plot
+xlim_max <- ts1+(2592000*5) #(first 30 days)                                        # set the end date for the plot
 
 ## or specify the start and end times for the plot
 #xlim_min <- as.POSIXct(strptime("2015-11-01 00:00", "%Y-%m-%d %H:%M", tz = "UTC"))
@@ -642,7 +660,7 @@ p <- plot_grid(p1, p2, nrow = 2, align = "v", rel_heights = c(0.5, 1.2))
 tiff(paste0("plots/ts_03_eventEx_rainEvents_check_",
             sitename, "_",
             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+     width = 210, height = 100, units = 'mm', res = 200, compression = "zip") # to make squares
 print(p)
 dev.off()
 
@@ -853,37 +871,37 @@ p<- ggplot() +
 print(p)
 
 ## save plot to file
-tiff(paste0("plots/","FDClog_",
-            userinput$sitename, "_100x100_",
-            format(head(dat$datetime, 1),"%Y%m%d"), "_",
-            format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
-     width = 100, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p.log)
-dev.off()
+# tiff(paste0("plots/","FDClog_",
+#             userinput$sitename, "_100x100_",
+#             format(head(dat$datetime, 1),"%Y%m%d"), "_",
+#             format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
+#      width = 100, height = 100, units = 'mm', res = 200, compression = "zip") # to make squares
+# print(p.log)
+# dev.off()
 
-tiff(paste0("plots/","FDClog_",
-            userinput$sitename, "_60x60_",
-            format(head(dat$datetime, 1),"%Y%m%d"), "_",
-            format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
-     width = 60, height = 60, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p.log)
-dev.off()
+# tiff(paste0("plots/","FDClog_",
+#             userinput$sitename, "_60x60_",
+#             format(head(dat$datetime, 1),"%Y%m%d"), "_",
+#             format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
+#      width = 60, height = 60, units = 'mm', res = 600, compression = "zip") # to make squares
+# print(p.log)
+# dev.off()
 
-tiff(paste0("plots/","FDC_",
-            userinput$sitename, "_100x100_",
-            format(head(dat$datetime, 1),"%Y%m%d"), "_",
-            format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
-     width = 100, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p)
-dev.off()
-
-tiff(paste0("plots/","FDC_",
-            userinput$sitename, "_60x60_",
-            format(head(dat$datetime, 1),"%Y%m%d"), "_",
-            format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
-     width = 60, height = 60, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p)
-dev.off()
+# tiff(paste0("plots/","FDC_",
+#             userinput$sitename, "_100x100_",
+#             format(head(dat$datetime, 1),"%Y%m%d"), "_",
+#             format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
+#      width = 100, height = 100, units = 'mm', res = 200, compression = "zip") # to make squares
+# print(p)
+# dev.off()
+# 
+# tiff(paste0("plots/","FDC_",
+#             userinput$sitename, "_60x60_",
+#             format(head(dat$datetime, 1),"%Y%m%d"), "_",
+#             format(tail(dat$datetime, 1),"%Y%m%d"),".tiff"),
+#      width = 60, height = 60, units = 'mm', res = 600, compression = "zip") # to make squares
+# print(p)
+# dev.off()
 
 rm(p, p.log)
 
@@ -949,7 +967,7 @@ rm(publishedBFI, BFI, runname)
 
 ## set x-axis limits
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000 #(first 30 days)                                        # set the end date for the plot
+xlim_max <- ts1+(2592000*3) #(first 30 days)                                        # set the end date for the plot
 
 ## or specify the start and end times for the plot
 # xlim_min <- as.POSIXct(strptime("2018-03-01 00:00", "%Y-%m-%d %H:%M", tz = "UTC"))
@@ -972,12 +990,12 @@ p2 <- ggQBaseflowSimple(eventEx, xlim_min, xlim_max) +
 
 p <- plot_grid(p1, p2, nrow = 2, align = "v", rel_heights = c(0.5, 1.2))
 
-tiff(paste0("plots/ts_04_eventEx_filtervalues_check_",
-            sitename, "_",
-            format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p)
-dev.off()
+# tiff(paste0("plots/ts_04_eventEx_filtervalues_check_",
+#             sitename, "_",
+#             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
+#      width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+# print(p)
+# dev.off()
 
 print(p)
 
@@ -1025,7 +1043,7 @@ legnd <- c("Event","Rainfall", "Baseflow","Q", "response event", "value",
 
 ## set x-axis limits
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000 #(first 30 days)                                        # set the end date for the plot
+xlim_max <- ts1+(2592000*5) #(first 30 days)                                        # set the end date for the plot
 
 ## or specify the start and end times for the plot
 # xlim_min <- as.POSIXct(strptime("2018-03-01 00:00", "%Y-%m-%d %H:%M", tz = "UTC"))
@@ -1094,14 +1112,14 @@ eventEx$peaks.over.Qmag.high <- calc_peaks$peaks.overQmag.high
 eventEx$diffSmoothedHr <- calc_peaks$diffSmoothedHr
 
 ## save plot to file
-tiff(paste0("plots/","ts_04_eventEx_findPeaks_output_",
-            userinput$site,
-            "_",
-            format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-#width = 210, height = 297, units = 'mm', res = 600) # A4
-print(p.peaks)
-dev.off()
+# tiff(paste0("plots/","ts_04_eventEx_findPeaks_output_",
+#             userinput$site,
+#             "_",
+#             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
+#      width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+# #width = 210, height = 297, units = 'mm', res = 600) # A4
+# print(p.peaks)
+# dev.off()
 
 print(p.peaks)
 
@@ -1160,7 +1178,7 @@ calc_diffcheck <- calc_diffcheck %>%
 str(calc_diffcheck)
 
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000                                                         # set the end date for the plot
+xlim_max <- ts1+(2592000*5)                                                         # set the end date for the plot
 
 ## PLOT: example of stopes above and below thresholds
 
@@ -1179,15 +1197,15 @@ p <- ggplot() +
 
 p
 
-## save plot to file
-tiff(paste0("plots/","ts_04_eventEx_slopechecks_",
-            userinput$site,
-            "_",
-            format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-#width = 210, height = 297, units = 'mm', res = 600) # A4
-print(p)
-dev.off()
+# ## save plot to file
+# tiff(paste0("plots/","ts_04_eventEx_slopechecks_",
+#             userinput$site,
+#             "_",
+#             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
+#      width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+# #width = 210, height = 297, units = 'mm', res = 600) # A4
+# print(p)
+# dev.off()
 
 #---- > 3.4 missing data treatment for value -------------------------------------
 
@@ -1229,7 +1247,7 @@ if(!exists("foo", mode = "function")) source("eventEx_05_responseEvents_20191209
 #---- > Plot: response events ---------------------------------------------------
 
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000                                                         # set the end date for the plot
+xlim_max <- ts1+(2592000*5)                                                         # set the end date for the plot
 
 ## or specify the start and end times for the plot
 # xlim_min <- as.POSIXct(strptime("2018-03-01 00:00", "%Y-%m-%d %H:%M", tz = "UTC"))
@@ -1284,12 +1302,12 @@ p <- plot_grid(p1, p2, nrow = 2, align = "v", rel_heights = c(0.5, 1.2))
 print(p)
 
 ## save plot to file
-tiff(paste0("plots/ts_05_eventEx_responseEvents_check_",
-            sitename, "_",
-            format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p)
-dev.off()
+# tiff(paste0("plots/ts_05_eventEx_responseEvents_check_",
+#             sitename, "_",
+#             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
+#      width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+# print(p)
+# dev.off()
 
 rm(p, p1, p2, legnd, xlim_max, xlim_min)
 
@@ -1304,7 +1322,7 @@ if(!exists("foo", mode = "function")) source("eventEx_06_combEvents_20191210.R")
 #---- > Plot: events ------------------------------------------------------------
 
 xlim_min <- ts1                                                                 # set the start date for the plot
-xlim_max <- ts1+2592000                                                         # set the end date for the plot
+xlim_max <- ts1+(2592000*5)                                                         # set the end date for the plot
 
 ## or specify the start and end times for the plot
 # xlim_min <- as.POSIXct(strptime("2018-03-01 00:00", "%Y-%m-%d %H:%M", tz = "UTC"))
@@ -1355,12 +1373,12 @@ p2 <-  ggplot(eventEx) +
 p <- plot_grid(p1, p2, nrow = 2, align = "v", rel_heights = c(0.5, 1.2))
 print(p)
 
-tiff(paste0("plots/ts_07_eventEx_comb_events_check_",           
-            sitename, "_",
-            format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
-     width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
-print(p)
-dev.off()
+# tiff(paste0("plots/ts_07_eventEx_comb_events_check_",
+#             sitename, "_",
+#             format(Sys.time(),"%Y%m%d_%H%M"),".tiff"),
+#      width = 210, height = 100, units = 'mm', res = 600, compression = "zip") # to make squares
+# print(p)
+# dev.off()
 
 
 #==== 7. EVENT METRICS ========================================================
@@ -1414,7 +1432,8 @@ for (i in c(1:nrow(EVENTS))){
   tiff(paste0(sitename, "/run_",runID,"/CHECK/plots/eventPlot",i, "_",
               format(EVENTS$Q.response.start.ts[i],"%Y%m%d_%H%M"),
               ".tiff"), 
-       width = 100, height = 100, units = 'mm', res = 600, compression = "zip")  
+       #width = 100, height = 100, units = 'mm', res = 600, compression = "zip")  
+       width = 100, height = 100, units = 'mm', res = 100, compression = "zip") 
   
   ## save plots
   p1 <-   ggplot(eventEx[eventEx$datetime %in% xlim_min:xlim_max, ]) + 
@@ -1645,7 +1664,9 @@ EVENTS$check.manual <- FALSE
 
 #================= !!!!! REMOVE BAD EVENTS HERE =================================
 
-check.manual.row <- c()    # overwrite this if you want to remove events
+check.manual.row <- c(1,64,65,78, 79, 80, 85, 87, 95, 96, 108,
+                      203, 229, 230, 248, 249,253 , 261, 284, 328, 329, 339, 
+                      353, 364, 367, 408, 413)    # overwrite this if you want to remove events
 
 
 
@@ -1656,7 +1677,7 @@ if(!is.null(check.manual.row)) {
 }
 
 # #EVENTSerr <- subset(EVENTS , EVENTS$check.outlier1 == TRUE & EVENTS$check.outlier2 == TRUE)
-# EVENTSerr <- subset(EVENTS , (EVENTS$check.outlier1 == TRUE & EVENTS$check.outlier2 == TRUE) | 
+# EVENTSerr <- subset(EVENTS , (EVENTS$check.outlier1 == TRUE & EVENTS$check.outlier2 == TRUE) |
 #                       EVENTS$check.outlier3 == TRUE |
 #                       EVENTS$check.manual == TRUE )
 
@@ -1847,7 +1868,8 @@ for (i in n){
   tiff(paste0(sitename, "/run_",runID,"/final_plots_fixedscale/eventPlot",i, "_",
               format(EVENTS$Q.response.start.ts[i],"%Y%m%d_%H%M"),
               ".tiff"),
-       width = 100, height = 100, units = 'mm', res = 600, compression = "zip")  
+       #width = 100, height = 100, units = 'mm', res = 600, compression = "zip")  
+       width = 100, height = 100, units = 'mm', res = 100, compression = "zip") 
   
   ## save plots
   p1 <-   ggplot(outputs) + 
@@ -1937,7 +1959,8 @@ for (i in n){
   tiff(paste0(sitename, "/run_",runID,"/final_plots/eventPlot",i, "_",
               format(EVENTS$Q.response.start.ts[i],"%Y%m%d_%H%M"),
               ".tiff"),
-       width = 100, height = 100, units = 'mm', res = 600, compression = "zip")  
+       #width = 100, height = 100, units = 'mm', res = 600, compression = "zip")
+       width = 100, height = 100, units = 'mm', res = 100, compression = "zip") 
   
   ## save plots
   p1 <-   ggplot(outputs[outputs$datetime %in% xlim_min:xlim_max, ]) + 

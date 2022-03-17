@@ -39,7 +39,7 @@ ggESDcheck <- function(DAT){
                        text = element_text(size = 8)) +
     scale_colour_manual(values= c("grey", "black"))
   
-  print(p)
+  #print(p)
 }
 
 
