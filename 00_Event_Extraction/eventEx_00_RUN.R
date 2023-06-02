@@ -129,8 +129,9 @@ useroutput <- userinput[c("site",
 
 flow <- readr::read_csv("data/02_DTM_stageToFlow_FINAL ALLto20180122.csv") %>% 
   select("Date  Time", "re-calc Q (m3 sec-1)") %>% 
+  slice(-1) %>% 
   rename("datetime" = 'Date  Time') %>%
-  mutate(datetime = dmy_hm(datetime, tz='UTC')) %>% 
+  mutate(datetime = dmy_hms(datetime, tz='UTC')) %>% 
   rename("q" = 're-calc Q (m3 sec-1)') %>% 
   mutate(q = as.numeric(q))
 
@@ -143,6 +144,8 @@ rain <- readr::read_csv("data/03_Rainfall_Radar_15min.csv") %>%
 
 dat <- full_join(flow, rain) %>% 
   select(datetime, rainfall, q)
+
+saveRDS(dat, "data/04_Rainfall_Q_15min.rds")
 
 rm(flow, rain)
 
