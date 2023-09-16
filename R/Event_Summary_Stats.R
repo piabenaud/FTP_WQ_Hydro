@@ -20,7 +20,7 @@ Event_Summary_Stats <- function(wq_flow_data){
   WQ_out <- wq_flow_data %>% 
     filter(sample == TRUE) %>% 
     select(datetime, eventID, resto,
-           DOC_calibrated, DOC_Load_inst, DOC_Load_kg, FWMC_DOC,
+           DOC_calibrated, DOC_Load_inst, DOC_Load_ha, FWMC_DOC,
            Abs400, FWMC_Abs400, C_C, FWMC_C_C, SUVA, Abs254, FWMC_SUVA) %>% 
     pivot_longer(., cols = 4:14, names_to = "metric", values_to = "result") %>% 
     group_by(eventID, metric, resto) %>%  

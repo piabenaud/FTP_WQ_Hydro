@@ -8,6 +8,7 @@
 # Load packages -----------------------------------------------------------
 
 # library(tidyverse) # wranglings
+# library(sf)
 # # 
 # targets::tar_load(WQ_Q_Data)
 # wq_flow_data <- WQ_Q_Data
@@ -15,7 +16,13 @@
 
 # The Function ------------------------------------------------------------
 
-DOC_Load <- function(wq_flow_data){
+DOC_Load <- function(wq_flow_data, shp_file){
+  
+  area_m2 <- st_read(shp_file) %>% # for calculating load per unit area (ha)
+    st_area(.)%>% 
+    as.numeric(.) 
+  
+  area_ha <- area_m2/10000 
   
   split_data <- wq_flow_data %>% 
     group_by(eventID) %>% 
@@ -60,7 +67,7 @@ DOC_Load <- function(wq_flow_data){
   
   out <- map2_df(split_data, event_loads, ~ .x %>% mutate("DOC_Load_g" = .y)) %>%  # use event_loads to make new DOC_Load col
     mutate(DOC_Load_kg = DOC_Load_g/1000) %>% # convert to kg, which is a slightly more sensible unit
-    mutate(DOC_Load_inst = DOC_calibrated * q_m3_s) # in g
- 
+    mutate(DOC_Load_inst = DOC_calibrated * q_m3_s) %>%  # in g
+    mutate(DOC_Load_ha = DOC_Load_kg/area_ha) # calculate load per ha
   
 }

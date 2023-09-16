@@ -18,7 +18,7 @@ WQ_Stats <- function(summary_stats){
   
   test <- summary_stats %>% 
     ungroup() %>% 
-    filter(metric %in% c("FWMC_DOC", "DOC_Load_kg", "FWMC_Abs400", "FWMC_C_C", "FWMC_SUVA")) %>% 
+    filter(metric %in% c("FWMC_DOC", "DOC_Load_ha", "FWMC_Abs400", "FWMC_C_C", "FWMC_SUVA")) %>% 
     select(metric, resto, mean) %>% 
     group_by(resto, metric) %>% 
     nest() %>% 

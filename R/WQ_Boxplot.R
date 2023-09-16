@@ -8,24 +8,24 @@
 
 # Load packages -----------------------------------------------------------
 
-# library(tidyverse) # wranglings
+ # library(tidyverse) # wranglings
 # 
-# summary_stats <- WQ_Q_event_stats
+ # summary_stats <- WQ_Q_event_stats
 
 # The function ------------------------------------------------------------
 
 WQ_Boxplots <- function(summary_stats){
   
-  metric_order <- c("FWMC_DOC", "DOC_Load_kg", "FWMC_Abs400", "FWMC_C_C", "FWMC_SUVA")
+  metric_order <- c("FWMC_DOC", "DOC_Load_ha", "FWMC_Abs400", "FWMC_C_C", "FWMC_SUVA")
   
-  metric_labels <- c(expression(DOC~(mg~L^{-1})), 
-                     expression(DOC~Load~(kg)),
-                     expression(Colour~(Au~m^{-1})), 
-                     expression(paste("Colour"~paste("/Carbon"))), 
-                     expression(SUVA))
+  metric_labels <- c(expression(atop(a,DOC~(mg~L^{-1}))), 
+                     expression(atop(b,DOC~Load~(kg~ha^{-1}))),
+                     expression(atop(c,Colour~(Au~m^{-1}))), 
+                     expression(atop(d,paste("Colour"~paste("/Carbon")))), 
+                     expression(atop(e,SUVA)))
   
   the_plot <- summary_stats %>% 
-    filter(metric %in% c("FWMC_DOC", "DOC_Load_kg", "FWMC_Abs400", "FWMC_C_C", "FWMC_SUVA")) %>% 
+    filter(metric %in% c("FWMC_DOC", "DOC_Load_ha", "FWMC_Abs400", "FWMC_C_C", "FWMC_SUVA")) %>% 
     mutate(resto = fct_relevel(resto, "Before", "After")) %>% 
     mutate(metric = factor(metric, levels = metric_order, labels = metric_labels)) %>% 
     # arrange(metric)
@@ -41,6 +41,7 @@ WQ_Boxplots <- function(summary_stats){
     theme(axis.title = element_blank())
   
 }
+
 
 
 

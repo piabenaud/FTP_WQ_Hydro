@@ -36,9 +36,10 @@ glm.plot <- function(.data, model.data, line=TRUE) {
     labs(y= (expression("Event Maximum Flow " (m^{3}~s^{-1}))),
          x=expression("Total Event Rainfall " (mm)),
          colour = "Restoration", 
-         fill = "Restoration") +
+         fill = "Restoration", tag = "c") +
     theme_bw() +
     theme(legend.position = 'none')
+   
 }
 
 #test <- glm.plot(event_metrics, model.data = glm_predictions)

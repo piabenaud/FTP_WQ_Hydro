@@ -14,7 +14,7 @@
 # library(tidyverse) # wranglings
 # library(ggforce)
 # library(patchwork)
-# 
+# # 
 # the_data <- The_GAMs
 # summary_data <- GAM_Summary
 
@@ -62,7 +62,7 @@ plot_GAM_hydro <- function(the_data, summary_data){
   
   p2 <- .data %>% 
     ggplot(aes(x=event_step, y=.fitted_rain , colour=resto, fill=resto)) +
-    geom_point(aes(y=rainfall_mm_h),alpha=0.06, lwd=0.4) +
+    geom_point(aes(y=rainfall_mm_h),alpha=0.06, lwd=0.4, size = 0.5) +
     # geom_line(lwd=1.1, alpha=0.4) +
     geom_ribbon(aes(x=event_step, ymin = .fitted_rain - (.se.fit_rain*1.96),
                     ymax = .fitted_rain + (.se.fit_rain*1.96), colour=resto,
@@ -81,7 +81,9 @@ plot_GAM_hydro <- function(the_data, summary_data){
           axis.text.x=element_blank(),
           axis.ticks.x=element_blank())
   
- out <- p2/p1 + plot_layout(heights = c(1, 2))
+ out <- p2/p1 + plot_layout(heights = c(1, 2)) +
+   plot_annotation(tag_levels = "a")
+ 
  return(out)
   
 }

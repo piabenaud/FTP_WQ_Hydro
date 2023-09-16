@@ -5,19 +5,16 @@
 # Created on: 05-05-2023
 
 
-
-
 # Load Targets ------------------------------------------------------------
 
 library(targets)
-# library(tarchetypes) # Load other packages as needed. # nolint
 
 
 # Define Targets options --------------------------------------------------
 
 # Set target options:
 tar_option_set(
-  packages = c("tidyverse", "lubridate", "broom", "gam", "ggforce", "patchwork", "glm2", "emmeans", "cowplot"), 
+  packages = c("tidyverse", "lubridate", "broom", "gam", "ggforce", "patchwork", "glm2", "emmeans", "cowplot", "sf"), 
   format = "rds" # default storage format
 )
 
@@ -106,7 +103,7 @@ list(
   tar_target(WQ_Q_Data, ID_Adequate(All_WQ_Q_Data)),
   
   # calculate loads
-  tar_target(WQ_Q_Data_Loads, DOC_Load(WQ_Q_Data)),
+  tar_target(WQ_Q_Data_Loads, DOC_Load(WQ_Q_Data, "data/FTP_Area1_HRA_polygon/FTP_Area1_HRA_polygon.shp")),
   
   # calculate FWMC
   tar_target(WQ_Q_Data_FWMC, FWMC(WQ_Q_Data)),
@@ -124,7 +121,10 @@ list(
   tar_target(WQ_Stats_Results, WQ_Stats(WQ_Q_event_stats)),
   
   # flow stats
-  tar_target(Flow_Stats, Flow.Sum.Tab(All_Event_Data))
+  tar_target(Flow_Stats, Flow.Sum.Tab(All_Event_Data)),
+  
+  # scatter plot
+  tar_target(WQ_Scatter_Plot, WQ_Scatter(WQ_Q_event_stats, WQ_Q_Data_All))
   
 )
 

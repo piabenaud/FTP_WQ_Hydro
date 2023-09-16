@@ -8,10 +8,10 @@
 
 # Load packages -----------------------------------------------------------
 
-library(tidyverse) # wranglings
-
-summary_stats <- WQ_Q_event_stats
-all_wq_data <- WQ_Q_Data_All
+# library(tidyverse) # wranglings
+# 
+# summary_stats <- WQ_Q_event_stats
+# all_wq_data <- WQ_Q_Data_All
 
 # The function ------------------------------------------------------------
 
@@ -78,16 +78,14 @@ WQ_Scatter <- function(summary_stats, all_wq_data){
   legend.key.size = unit(0.5, "cm"),
   legend.text = element_text(color="gray20", ))
   
-  tiff("/Users/piabenaud/Library/CloudStorage/OneDrive-UniversityofExeter/NfCPGS/Papers/FTP - Short-term WQ and Hydro/Figures/Figure_8_WQ_Flow.tiff", width = 18, height = 7, units = 'cm', res = 300)
+  tiff("figures/Figure_8_WQ_Flow.tiff", width = 18, height = 7, units = 'cm', res = 300)
   out
   dev.off()
   
-  
+  return(out)
   
 }
 
 
-ggplot(WQ_Q_Data_All)+
-  geom_point(aes(colour = resto, x = q_m3_s, y = DOC_calibrated)) +
-  scale_colour_manual(values = c("Before" = "#ca0020", "After" = "#0571b0"))
+
 
